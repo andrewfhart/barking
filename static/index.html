@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+
+<body>
+    <textarea name="text" placeholder="Enter text to speak..."></textarea>
+    <select name="speaker">
+        <option value="" selected>None</option>
+        <option value="v2/en_speaker_1">Male US</option>
+        <option value="v2/en_speaker_6">Male US (good)</option>
+        <option value="v2/en_speaker_9">Female US</option>
+        <option value="custom">Custom</option>
+    </select>
+    <input type="text" name="custom_speaker" placeholder="Enter custom speaker name..." style="display:none">
+    <input type="button" value="Submit" onClick="submitForm()">
+    <input type="checkbox" name="split" value="true">Split
+    <hr/>
+    <span id="filename"></span>
+    <audio controls>
+        <source src="" type="audio/wav">
+    </audio>
+</body>
+<script>
+    // Function to show the custom_speaker input when the custom option is selected
+    document.getElementsByName("speaker")[0].addEventListener("change", function () {
+        if (document.getElementsByName("speaker")[0].value == "custom") {
+            document.getElementsByName("custom_speaker")[0].style.display = "inline";
+        } else {
+            document.getElementsByName("custom_speaker")[0].style.display = "none";
+        }
+    });
+    // Function that posts text as a JSON payload to the tts endpoint
+    function submitForm() {
+        // Determine the selected speaker. if "Custom", use the custom_speaker input
+        var speaker = document.getElementsByName("speaker")[0].value;
+        if (speaker == "custom") {
+            speaker = document.getElementsByName("custom_speaker")[0].value;
+        }
+        // Get the text to speak
+        var text = document.getElementsByName("text")[0].value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:5000/tts", true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({
+            text: text,
+            speaker: speaker,
+            split: document.getElementsByName("split")[0].checked
+        }));
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                // Parse the JSON response
+                var response = JSON.parse(xhr.responseText);
+                // Extract the filename
+                var filename = response["filename"];
+                // Update the audio source to the new file
+                document.getElementsByTagName("source")[0].src = "http://localhost:5000/play?filename=" + filename;
+                // Update the filename
+                document.getElementById("filename").innerHTML = filename;
+                // Reload the audio element
+                document.getElementsByTagName("audio")[0].load();
+            }
+        }
+    }
+
+
+
+
+
+</script>
+
+</html>
