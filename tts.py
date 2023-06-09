@@ -1,25 +1,19 @@
-from bark import SAMPLE_RATE, generate_audio, preload_models
+from bark import SAMPLE_RATE, generate_audio
 from scipy.io.wavfile import write as write_wav
 import nltk
 import numpy as np
 
-preload_models()
+def tts_single(text_prompt, speaker = None):
+  history_prompt = speaker if speaker else None
+  audio_array = generate_audio(text_prompt, history_prompt=history_prompt)
+  return audio_array
 
-text_prompt = "Hello, world!"
-
-SPLIT=False
-
-if (SPLIT):
-  SPEAKER="v2/en_speaker_9"
-  sentences = nltk.sent_tokenize(text_prompt)
+def tts_split(text_prompt, splitter = nltk.sent_tokenize, speaker = None):
+  sentences = splitter(text_prompt)
   silence = np.zeros(int(0.25*SAMPLE_RATE))
   pieces = []
+  history_prompt = speaker if speaker else None
   for sentence in sentences:
-    audio_array = generate_audio(sentence, history_prompt=SPEAKER)
+    audio_array = generate_audio(sentence, history_prompt=history_prompt)
     pieces += [audio_array, silence.copy()]
-  write_wav("latest.wav", SAMPLE_RATE, np.concatenate(pieces))
-else:
-  audio_array = generate_audio(text_prompt)
-  write_wav("latest.wav", SAMPLE_RATE, audio_array)
-
-print("Done.")
+  return np.concatenate(pieces)
